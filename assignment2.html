@@ -1,0 +1,65 @@
+---
+layout: page
+title: (CG) Assignment 2
+---
+<h2> Fractals </h2>
+<img src="https://github.com/malukasrokas/webGL-HTML5/blob/master/Assignment2/19.png?raw=true" width="300px" height="300px">
+
+<p><h2> Requirements:</h2>
+    <li> Find the four transformations of which this fractal was created</li>
+    <li> Create a step/level system to interactively change the fractalization</li>
+    <li> The four quarters of the fractal must be colorized differently</li>
+    <li> Animate all four transformations </li>
+</p>
+<p><h2> Solution:</h2>
+    <li> Implemented buttons to change the level of fractalization</li>
+    <li> To colirize quarters differently I applied the fillstyle to only the previous to last level of fractal</li>
+    <li> To animate transformations for each iteration I added increments to shape's position, scale and rotation</li>
+</p>
+<h5>You can get the code <a href="https://github.com/malukasrokas/webGL-HTML5/blob/master/Assignment2/Fractals.js">here</a>.</h5>
+<h3> End Result: </h3>
+
+<canvas id="canvas2" width="500px" height="500px" style="border:3px solid black"></canvas>
+<div style="width:120px;";>
+
+        <p style="font-size:20px;"><b>Level </b></p>
+        <button class="button" onclick="levelDown()" type="button"> < </button>
+        <level id="level" class="bolden" style="font-size:25px; font-weight:bold">0</level>
+        <button class="button" onclick="levelUp()" type="button"> > </button>
+
+        <p style="font-size:20px;"><b>Transformation </b></p>
+        <button class="button" onclick="transformPrevious()" type="button"> < </button>
+        <transform id="transform" class="bolden" style="font-size:25px; font-weight:bold">0</transform>
+        <button class="button" onclick="transformNext()" type="button"> > </button>
+        <button class="button"  onclick="retransform()" type="button" style="margin-top:10px"> Again </button>
+</div>
+<script src="https://rawgit.com/malukasrokas/webGL-HTML5/master/Assignment2/Fractals.js"></script>
+
+<style>
+    .bolden {
+        font-weight:bold;
+        font-size: 28;
+        text-decoration:none;
+    }
+
+    .button {
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 24px;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        outline: none;
+        color: #fff;
+        background-color: #4CAF50;
+        border: none;
+        border-radius: 15px;
+    }
+
+    .button:hover {background-color: #3e8e41}
+
+    .button:active {
+        box-shadow: 0 1px #666;
+        transform: translateY(4px);
+    }
+</style>
