@@ -1,10 +1,11 @@
 ---
 layout: page
-title: (CG) Assignment 2
+title: (CG) Fractals
 ---
 <h2> Fractals </h2>
+<p class="message">Goal: Learn how fractals work and recreate the fractal given in the picture<br>
+                   Time: 2 weeks</p>
 <img src="https://github.com/malukasrokas/webGL-HTML5/blob/master/Assignment2/19.png?raw=true" width="300px" height="300px">
-
 <p><h2> Requirements:</h2>
     <li> Find the four transformations of which this fractal was created</li>
     <li> Create a step/level system to interactively change the fractalization</li>
@@ -16,11 +17,11 @@ title: (CG) Assignment 2
     <li> To colirize quarters differently I applied the fillstyle to only the previous to last level of fractal</li>
     <li> To animate transformations for each iteration I added increments to shape's position, scale and rotation</li>
 </p>
-<h5>You can get the code <a href="https://github.com/malukasrokas/webGL-HTML5/blob/master/Assignment2/Fractals.js">here</a>.</h5>
+<h5>You can see the code <a href="https://github.com/malukasrokas/webGL-HTML5/blob/master/Assignment2/Fractals.js">here</a>.</h5>
 <h3> End Result: </h3>
 
 <canvas id="canvas2" width="500px" height="500px" style="border:3px solid black"></canvas>
-<div style="width:120px;";>
+<div style="width:120px;">
 
         <p style="font-size:20px;"><b>Level </b></p>
         <button class="button" onclick="levelDown()" type="button"> < </button>
@@ -31,7 +32,7 @@ title: (CG) Assignment 2
         <button class="button" onclick="transformPrevious()" type="button"> < </button>
         <transform id="transform" class="bolden" style="font-size:25px; font-weight:bold">0</transform>
         <button class="button" onclick="transformNext()" type="button"> > </button>
-        <button class="button"  onclick="retransform()" type="button" style="margin-top:10px"> Again </button>
+        <button class="button"  onclick="retransform()" type="button" style="margin-top:10px"> Repeat </button>
 </div>
 <script src="https://rawgit.com/malukasrokas/webGL-HTML5/master/Assignment2/Fractals.js"></script>
 

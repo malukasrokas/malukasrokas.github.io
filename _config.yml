@@ -6,9 +6,9 @@ highlighter:      pygments
 permalink:        pretty
 
 # Setup
-title:            Rokas M.
+title:            Rokas Malukas
 tagline:          'Computer Graphics'
-description:      'A place to showcase my work'
+description:      'Computer Graphics work'
 url:              https://github.com/malukasrokas
 baseurl:          /
 
