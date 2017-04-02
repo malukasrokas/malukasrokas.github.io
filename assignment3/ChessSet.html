@@ -1,0 +1,287 @@
+<html>
+	<head>
+		<title>Cubic Chess Set</title>
+		<style>
+			body {margin: 0;}
+			canvas {width: 100%; height: 100%}
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script src="js/OrbitControls.js"></script>
+		<script>
+
+		var scene, camera, renderer, controls;
+		var geometry, material, mesh, loader;
+		var squareX = 128;
+		var squareY = 128;
+
+		init();
+		animate();
+		createBoard();
+		drawSets();
+
+		function init() {
+
+		    scene = new THREE.Scene();
+
+			// Renderer
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+			renderer.shadowMap.enabled = true;
+			renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+		    camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000 );
+			camera.position.set(500, 300, -500);
+
+			// Skybox
+			var skyBoxGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
+			var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+			var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+			scene.add(skyBox);
+
+			// Controls
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+			controls.addEventListener( 'change', render );
+			controls.enableDamping = true;
+			controls.dampingFactor = 0.75;
+			controls.enableZoom = true;
+			controls.target.set(500,50,600);
+
+			// Spotlight
+			var spotLight = new THREE.SpotLight(0xffffff);
+			spotLight.position.set(500,1000,1500);
+			spotLight.castShadow = true;
+			spotLight.shadow.mapSize.width = 1024;
+			spotLight.shadow.mapSize.height = 1024;
+			spotLight.shadow.camera.near = 500;
+			spotLight.shadow.camera.far = 2000;
+			spotLight.shadow.camera.fov = 30;
+			spotLight.target.position.set(500, 0, 500);
+
+			scene.add (spotLight.target);
+			scene.add( spotLight );
+
+			var spotLight2 = new THREE.SpotLight(0x7ec0ee);
+			spotLight2.position.set(500,1000,-500);
+			spotLight2.castShadow = true;
+			spotLight2.shadow.mapSize.width = 1024;
+			spotLight2.shadow.mapSize.height = 1024;
+
+			spotLight2.shadow.camera.near = 500;
+			spotLight2.shadow.camera.far = 2000;
+			spotLight2.shadow.camera.fov = 30;
+			spotLight2.target.position.set(500, 0, 500);
+
+			scene.add (spotLight2.target);
+			scene.add( spotLight2 );
+
+		}
+
+		function animate() {
+
+		    requestAnimationFrame( animate );
+
+		    render();
+			controls.update();
+		}
+
+		function render() {
+			renderer.render( scene, camera );
+		}
+
+		function drawSets() {
+			setColor("white");
+			// Draws white pieces
+			for (i=0; i<8; i++) {
+				drawPawn(squareX*i, squareY*1);
+			}
+			drawRook(squareX*7, 0);
+			drawRook(0,0);
+
+			drawKnight(squareX*6, 0);
+			drawKnight(squareX*1, 0);
+
+			drawBishop(squareX*5,0);
+			drawBishop(squareX*2, 0);
+
+			drawKing(squareX*4, 0);
+			drawQueen(squareX*3, 0);
+
+
+			setColor("black");
+			// Draws black pieces
+			for (i=0; i<8; i++) {
+				drawPawn(squareX*i, squareY*6);
+			}
+			drawRook(squareX*7, squareY*7);
+			drawRook(0, squareY*7);
+
+			drawBlackKnight(squareX*6, squareY*7);
+			drawBlackKnight(squareX*1, squareY*7);
+
+			drawBishop(squareX*5, squareY*7);
+			drawBishop(squareX*2, squareY*7);
+
+			drawKing(squareX*4, squareY*7);
+			drawQueen(squareX*3, squareY*7);
+		}
+
+		function makeCube(width, height, length, x, y, z) {
+
+			var cubeGeometry = new THREE.BoxGeometry(x, y, z);
+			var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+			cube.castShadow = true;
+			cube.receiveShadow = true;
+			scene.add(cube);
+
+			var edgeGeometry = new THREE.BoxBufferGeometry(x, y, z);
+			var edges = new THREE.EdgesGeometry(edgeGeometry);
+
+			var line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color : 0x000000}));
+			scene.add(line);
+
+			cube.position.set(width, height, length);
+			line.position.set(width, height, length);
+		}
+
+		function setColor(color) {
+			if (color == "white") {
+				cubeMaterial = new THREE.MeshLambertMaterial({color: 0xf5ad6f});
+				color = "white";
+			}
+			else if (color == "black") {
+				cubeMaterial = new THREE.MeshLambertMaterial({color: 0x413839 });
+				color = "black";
+			}
+		}
+
+		function createBoard() {
+			// Texture Loader
+			loader = new THREE.TextureLoader();
+
+			// Chess board
+			loader.load('img/chessboard.png', function(texture) {
+
+				var geometry = new THREE.BoxGeometry(1024,10,1024);
+				var material = new THREE.MeshLambertMaterial({ map: texture, overdraw: 0.5});
+				var boardMesh = new THREE.Mesh(geometry, material);
+				boardMesh.receiveShadow = true;
+				scene.add(boardMesh);
+				boardMesh.position.set(64+128*3, -20, 64+128*3);
+			});
+		}
+
+		function drawPawn(posX, posZ) {
+
+			makeCube(posX, 0,  posZ, 65, 30, 65);
+			makeCube(posX, 20, posZ, 50, 20, 50);
+			makeCube(posX, 40, posZ, 20, 80, 20);
+			makeCube(posX, 80, posZ, 40, 10, 40);
+			makeCube(posX, 87, posZ, 17, 17, 17);
+		}
+
+		function drawRook(posX, posZ) {
+			makeCube(posX, 0, posZ, 70, 30, 70);
+			makeCube(posX, 20, posZ, 50, 15, 50);
+			makeCube(posX, 40, posZ, 35, 75, 35);
+			makeCube(posX, 80, posZ, 50, 15, 50);
+			makeCube(posX, 90, posZ+18, 25, 20, 10);
+			makeCube(posX, 90, posZ-18, 25, 20, 10);
+			makeCube(posX-18, 90, posZ, 10, 20, 25);
+			makeCube(posX+18, 90, posZ, 10, 20, 25);
+		}
+
+		function drawBishop(posX, posZ) {
+			makeCube(posX, -10, posZ, 70, 20, 70);
+			makeCube(posX, 5, posZ, 60, 10, 60);
+			makeCube(posX, 10, posZ, 50, 10, 50);
+			makeCube(posX, 40, posZ, 25, 85, 25);
+			makeCube(posX, 78, posZ, 45, 5, 45);
+			makeCube(posX, 90, posZ, 20, 40, 20);
+			makeCube(posX, 90, posZ, 25, 20, 25);
+			makeCube(posX, 110, posZ, 10, 10, 10);
+			makeCube(posX, 115, posZ, 5, 5, 5);
+		}
+
+		function drawKing(posX, posZ) {
+			makeCube(posX, -10, posZ, 80, 10, 80);
+			makeCube(posX, -3, posZ, 70, 7, 70);
+			makeCube(posX, 0, posZ, 55, 15, 55);
+			makeCube(posX, 45, posZ, 40, 95, 40);
+			makeCube(posX, 90, posZ, 65, 10, 65);
+			makeCube(posX, 96, posZ, 30, 5, 30);
+			makeCube(posX, 99, posZ, 35, 5, 35);
+			makeCube(posX, 102, posZ, 45, 5, 45);
+			makeCube(posX, 105, posZ, 55, 5, 55);
+			makeCube(posX, 120, posZ, 15, 50, 15);
+			makeCube(posX, 130, posZ, 50, 12, 12);
+		}
+
+		function drawQueen(posX, posZ) {
+			makeCube(posX, -10, posZ, 80, 10, 80);
+			makeCube(posX, -3, posZ, 70, 7, 70);
+			makeCube(posX, 0, posZ, 55, 15, 55);
+			makeCube(posX, 45, posZ, 30, 95, 30);
+			makeCube(posX, 90, posZ, 65, 10, 65);
+			makeCube(posX, 96, posZ, 60, 5, 60);
+			makeCube(posX, 99, posZ, 50, 5, 50);
+			makeCube(posX, 102, posZ, 45, 15, 45);
+			// Crown
+			makeCube(posX, 114, posZ-20, 15, 25, 2);
+			makeCube(posX, 114, posZ+20, 15, 25, 2);
+			makeCube(posX+15, 114, posZ-20, 10, 17, 2);
+			makeCube(posX-15, 114, posZ-20, 10, 17, 2);
+			makeCube(posX-15, 114, posZ+20, 10, 17, 2);
+			makeCube(posX+15, 114, posZ+20, 10, 17, 2);
+
+			makeCube(posX-20, 114, posZ, 2, 25, 15);
+			makeCube(posX-20, 114, posZ-15, 2, 17, 10);
+			makeCube(posX-20, 114, posZ+15, 2, 17, 10);
+			makeCube(posX+20, 114, posZ, 2, 25, 15);
+			makeCube(posX+20, 114, posZ+15, 2, 17, 10);
+			makeCube(posX+20, 114, posZ-15, 2, 17, 10);
+
+			makeCube(posX, 114, posZ, 25, 10, 25);
+			makeCube(posX, 120, posZ, 17, 10, 17);
+			makeCube(posX, 130, posZ, 7, 12, 7);
+		}
+
+		function drawKnight(posX, posZ) {
+			makeCube(posX, -10, posZ, 80, 10, 80);
+			makeCube(posX, 0, posZ, 35, 40, 60);
+			makeCube(posX, 22, posZ+5, 34, 10, 60);
+			makeCube(posX, 32, posZ+10, 33, 10, 60);
+			makeCube(posX, 42, posZ+15, 32, 10, 60);
+			makeCube(posX, 52, posZ+10, 34, 10, 60);
+			makeCube(posX, 62, posZ+5, 33, 10, 60);
+			makeCube(posX, 72, posZ+5, 32, 10, 60);
+			makeCube(posX, 78, posZ+5, 33, 5, 55);
+			makeCube(posX, 88, posZ+15, 33, 15, 85);
+			makeCube(posX, 101, posZ+10, 33, 10, 70);
+			makeCube(posX, 110, posZ+8, 33, 8, 55);
+			makeCube(posX, 118, posZ+6, 33, 8, 40);
+			makeCube(posX, 123, posZ+4, 33, 5, 25);
+		}
+
+		function drawBlackKnight(posX, posZ) {
+			makeCube(posX, -10, posZ, 80, 10, 80);
+			makeCube(posX, 0, posZ, 35, 40, 60);
+			makeCube(posX, 22, posZ-5, 34, 10, 60);
+			makeCube(posX, 32, posZ-10, 33, 10, 60);
+			makeCube(posX, 42, posZ-15, 32, 10, 60);
+			makeCube(posX, 52, posZ-10, 34, 10, 60);
+			makeCube(posX, 62, posZ-5, 33, 10, 60);
+			makeCube(posX, 72, posZ-5, 32, 10, 60);
+			makeCube(posX, 78, posZ-5, 33, 5, 55);
+			makeCube(posX, 88, posZ-15, 33, 15, 85);
+			makeCube(posX, 101, posZ-10, 33, 10, 70);
+			makeCube(posX, 110, posZ-8, 33, 8, 55);
+			makeCube(posX, 118, posZ-6, 33, 8, 40);
+			makeCube(posX, 123, posZ-4, 33, 5, 25);
+		}
+
+		</script>
+	</body>
+</html>
