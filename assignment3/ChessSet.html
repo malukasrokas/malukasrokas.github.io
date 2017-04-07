@@ -77,6 +77,23 @@
 			scene.add (spotLight2.target);
 			scene.add( spotLight2 );
 
+			// Light Camera Helpers
+			// var helper = new THREE.CameraHelper(spotLight2.shadow.camera);
+			// scene.add(helper);
+			// var helper2 = new THREE.CameraHelper(spotLight.shadow.camera);
+			// scene.add(helper2);
+
+			//Shadow Test Cubes
+			// cubes = new THREE.Mesh( new THREE.CubeGeometry( 50, 50, 50 ), new THREE.MeshLambertMaterial({color: 0x800000}) );
+			// cubes.position.set(400, 200, 400);
+			// cubes.castShadow = true;
+			// scene.add(cubes);
+			//
+			// cube = new THREE.Mesh( new THREE.CubeGeometry( 500, 10, 500 ), new THREE.MeshLambertMaterial({color: 0xffffff}) );
+			// cube.position.set(400, 100, 400);
+			// cube.receiveShadow = true;
+			// cube.castShadow = true;
+			// scene.add(cube);
 		}
 
 		function animate() {
@@ -95,7 +112,7 @@
 			setColor("white");
 			// Draws white pieces
 			for (i=0; i<8; i++) {
-				drawPawn(squareX*i, squareY*1);
+				drawPawn(squareX*i, squareY*2);
 			}
 			drawRook(squareX*7, 0);
 			drawRook(0,0);
