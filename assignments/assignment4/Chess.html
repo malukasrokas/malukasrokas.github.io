@@ -1,0 +1,218 @@
+<html>
+	<head>
+		<title>Cubic Chess Set</title>
+		<style>
+			body {margin: 0;}
+			canvas {width: 100%; height: 100%}
+		</style>
+		<script src="../jslib/three.js"></script>
+		<script src="../jslib/OrbitControls.js"></script>
+		<script type="text/javascript" src="data.json"></script>
+	</head>
+
+	<body>
+		<script>
+
+		var scene, camera, renderer, controls;
+		var figure;
+		//var geometry, material, mesh, loader;
+		var squareX = 128;
+		var squareY = 128;
+		var loader = new THREE.TextureLoader();
+		var color = "white";
+
+		init();
+
+		function init() {
+
+		    scene = new THREE.Scene();
+			// Renderer
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+			document.body.appendChild( renderer.domElement );
+
+            // Camera
+            camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000 );
+			camera.position.set( 500, 300, -500 );
+
+            // Axes
+            // var axes = new THREE.AxisHelper( 200 );
+            // scene.add( axes );
+
+            // Spotlight
+            var spotLight = new THREE.SpotLight( 0xffffff, 0.7, 10000 );
+            spotLight.position.set( 100, 800, 500 );
+            spotLight.castShadow = true;
+            spotLight.shadow.mapSize.width = 1024;
+            spotLight.shadow.mapSize.height = 1024;
+            spotLight.shadow.camera.near = 0.1;
+            spotLight.shadow.camera.far = 1200;
+            spotLight.shadow.camera.fov = 50;
+            scene.add( spotLight );
+
+            // Spotlight target
+            spotLight.target.position.set( 400, 0, 500 );
+            scene.add (spotLight.target);
+
+            // Spotlight helper
+            // var helper = new THREE.CameraHelper(spotLight.shadow.camera);
+            // scene.add(helper);
+
+			// Second spotlight
+			var spotLight2 = new THREE.SpotLight( 0xffffff, 1.1 );
+            scene.add( spotLight2 );
+			spotLight2.position.set( 0, 1000, 0 );
+            spotLight2.target.position.set( 512, 0, 512 );
+            scene.add (spotLight2.target);
+
+			// Skybox
+			var skyBoxGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
+			var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+			var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+			scene.add(skyBox);
+
+			// Controls
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+			controls.addEventListener( 'change', render );
+			controls.enableDamping = true;
+			controls.dampingFactor = 0.75;
+			controls.enableZoom = true;
+			controls.target.set( 500, 50, 600);
+
+			// Reanimating the scene and creating the board
+            animate();
+            createBoard();
+			buildSet();
+		}
+
+
+		function buildSet() {
+
+			buildPawns();
+			buildRooks();
+			buildKings();
+			buildQueens();
+			}
+
+		function buildPawns() {
+
+			buildPiece(pawn);
+			for (i=0; i<8; i++) {
+				var pawnClone = figure.clone();
+				pawnClone.position.set(squareX*i, 0, squareY);
+				scene.add(pawnClone);
+			}
+		}
+
+
+		function buildRooks() {
+
+			buildPiece( rook );
+			var rookClone = figure.clone();
+			rookClone.position.set(0, 0, 0);
+			scene.add( rookClone );
+
+			var rookClone = figure.clone();
+			rookClone.position.set( squareX*7, 0, 0 );
+			scene.add( rookClone );
+		}
+
+		function buildQueens() {
+
+			buildPiece( queen );
+			var queenClone = figure.clone();
+			queenClone.position.set(squareX*3, 0, 0);
+			scene.add( queenClone );
+		}
+
+		function buildKings() {
+
+			var geometry, cube;
+			var kingGroup = new THREE.Object3D();
+
+			buildPiece( king );
+			var kingClone = figure.clone();
+			kingClone.position.set( squareX*4, 0, 0 );
+
+			// Vertical cube
+			kingGroup.add( kingClone );
+			geometry = new THREE.BoxGeometry( 5, 20, 5 );
+			cube = createMesh( geometry );
+			cube.castShadow = true;
+			cube.position.set( kingClone.position.x, kingClone.position.z + 190, kingClone.position.y );
+			kingGroup.add( cube );
+
+			// Horizontal cube
+			geometry = new THREE.BoxGeometry( 20, 5, 5 );
+			cube = createMesh( geometry );
+			cube.position.set( kingClone.position.x, kingClone.position.z + 190, kingClone.position.y );
+
+			kingGroup.add( cube );
+
+			scene.add( kingGroup );
+		}
+
+		function buildPiece(piece) {
+
+            var points = [];
+            var count = piece.pointsX.length;
+            for (var i = 0; i < count; i++) {
+                points.push(new THREE.Vector2(piece.pointsX[i], piece.pointsY[i]));
+            }
+
+            var figureGeometry = new THREE.LatheGeometry( points, 24 );
+            figure = createMesh( figureGeometry );
+			figure.castShadow = true;
+        }
+
+        function createMesh( geom ) {
+
+			if (color == "white")
+		    	var meshMaterial = new THREE.MeshLambertMaterial({color: 0xeed5b7});
+			else if (color == "black")
+				var meshMaterial = new THREE.MeshLambertMaterial({color: 0x254117});
+
+            meshMaterial.side = THREE.DoubleSide;
+
+			// Wireframe
+            var wireFrameMat = new THREE.MeshBasicMaterial({color: 0x00ff00});
+            wireFrameMat.wireframe = true;
+
+			// Multimaterial
+            var mesh = THREE.SceneUtils.createMultiMaterialObject(geom, [meshMaterial, wireFrameMat]);
+			mesh.children.forEach(function( material ) {
+				material.castShadow = true;
+			})
+			return mesh;
+        }
+
+		function animate() {
+
+		    requestAnimationFrame( animate );
+		    render();
+			controls.update();
+		}
+
+		function render() {
+			renderer.render( scene, camera );
+		}
+
+		function createBoard() {
+
+			// Chess board
+			loader.load('img/chessboard.png', function(texture) {
+
+				var geometry = new THREE.BoxGeometry(1024,5,1024);
+				var material = new THREE.MeshLambertMaterial({ map: texture, overdraw: 0.5});
+				var boardMesh = new THREE.Mesh( geometry, material );
+				boardMesh.receiveShadow = true;
+				scene.add(boardMesh);
+				boardMesh.position.set( 64+128*3, -3, 64+128*3 );
+			});
+		}
+
+		</script>
+	</body>
+</html>
