@@ -135,12 +135,52 @@
 
 			buildPiece( knight );
 			var knightClone = figure.clone();
-			knightClone.position.set(squareX*6, 0, 0);
-			scene.add( knightClone );
 
-			knightClone = figure.clone();
-			knightClone.position.set(squareX*1, 0, 0);
-			scene.add( knightClone );
+			// Knight 2D shape
+			var knightShape = new THREE.Shape();
+			knightShape.moveTo( 20, 0 );
+			knightShape.bezierCurveTo( 13, 0, 7, -3, 0, 6);
+			knightShape.bezierCurveTo( 25, 10, 30, 30 ,10, 80 );
+			knightShape.bezierCurveTo( 10, 110, 15, 120, 60, 95 );
+			knightShape.bezierCurveTo( 75, 90, 78, 95, 70, 80)
+			knightShape.lineTo(60, 80);
+			knightShape.bezierCurveTo(70, 80, 50, 100,55, 75)
+			knightShape.lineTo(70, 74);
+			knightShape.lineTo(70, 76);
+			knightShape.moveTo(70, 74);
+			knightShape.lineTo(65, 68);
+			knightShape.bezierCurveTo(55, 65, 45, 80, 40, 68);
+			knightShape.bezierCurveTo(50, 60, 60, 60, 80, 30)
+			knightShape.bezierCurveTo(83, 25, 80, 10 ,70, 0)
+
+			var extrudeSettings = {
+				steps: 2,
+				amount: 16,
+				bevelEnabled: true,
+				bevelThickness: 4,
+				bevelSize: 1,
+				bevelSegments: 1
+			};
+
+			// Creating knight mesh and positioning it
+			var meshMaterial = new THREE.MeshLambertMaterial({color: 0xeed5b7});
+			var wireFrameMat = new THREE.MeshBasicMaterial({color: 0x00ff00});
+            wireFrameMat.wireframe = true;
+			var geometry = new THREE.ExtrudeGeometry( knightShape, extrudeSettings );
+			var mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, [meshMaterial, wireFrameMat]);
+			mesh.position.set(knightClone.position.x + 8, 50, -40);
+			mesh.rotateY(Math.PI*2/4*3);
+
+			//
+			var knightGroup = new THREE.Object3D();
+			knightGroup.add( knightClone );
+			knightGroup.add( mesh );
+			scene.add(knightGroup);
+			knightGroup.position.set(squareX*6, 0, 0);
+			var knightGroupClone = knightGroup.clone();
+			knightGroup.position.set(squareX*1, 0, 0);
+			scene.add(knightGroupClone);
+
 		}
 
 		function buildRooks() {
