@@ -49,30 +49,34 @@
 			controls.enableZoom = true;
 			controls.target.set(500,50,600);
 
+			// Soft white ambient light
+			var ambientLight = new THREE.AmbientLight( 0x404040, 1 );
+			scene.add( ambientLight );
+
 			// Spotlight
-			var spotLight = new THREE.SpotLight(0xffffff, 1.5, 8000);
-			spotLight.position.set(300,800,-300);
-			spotLight.castShadow = true;
+			var spotLight = new THREE.SpotLight(0xffffff, 1.2, 8000);
+			spotLight.position.set(300,1000,1000);
+			//spotLight.castShadow = true;
 			spotLight.shadow.mapSize.width = 1024;
 			spotLight.shadow.mapSize.height = 1024;
 			spotLight.shadow.camera.near = 500;
 			spotLight.shadow.camera.far = 2000;
 			spotLight.shadow.camera.fov = 30;
-			spotLight.target.position.set(500, 0, 500);
+			spotLight.target.position.set(300, 0, 300);
 
 			scene.add (spotLight.target);
 			scene.add( spotLight );
 
-			 var spotLight2 = new THREE.SpotLight(0x7ec0ee, 0.7);
-			 spotLight2.position.set(500,800,100);
+			 var spotLight2 = new THREE.SpotLight(0x7ec0ee, 0.5);
+			 spotLight2.position.set(400,800,400);
 			 spotLight2.shadow.mapSize.width = 1024;
 			 spotLight2.shadow.mapSize.height = 1024;
-			
+
 			 spotLight2.shadow.camera.near = 50;
 			 spotLight2.shadow.camera.far = 2000;
 			 spotLight2.shadow.camera.fov = 30;
 			 spotLight2.target.position.set(500, 0, 500);
-			//
+
 			 scene.add (spotLight2.target);
 			 scene.add( spotLight2 );
 
@@ -134,15 +138,13 @@
 			cube.castShadow = true;
 			cube.receiveShadow = true;
 			scene.add(cube);
-
 			var edgeGeometry = new THREE.BoxBufferGeometry(x, y, z);
 			var edges = new THREE.EdgesGeometry(edgeGeometry);
-
 			var line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color : 0x000000}));
 			scene.add(line);
-
 			cube.position.set(width, height, length);
 			line.position.set(width, height, length);
+
 		}
 
 		function setColor(color) {
