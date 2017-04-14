@@ -1,74 +1,81 @@
 <html>
-	<head>
-		<title>Cubic Chess Set</title>
-		<style>
-			body {margin: 0;}
-			canvas {width: 100%; height: 100%}
-		</style>
-		<script src="../jslib/three.js"></script>
-		<script src="../jslib/OrbitControls.js"></script>
-		<script src="../jslib/csg.js"></script>
-		<script src="../jslib/ThreeCSG.js"></script>
-		<script type="text/javascript" src="data.json"></script>
-	</head>
 
-	<body>
-		<script>
+<head>
+	<title>Cubic Chess Set</title>
+	<style>
+		body { margin: 0 }
+	</style>
+	<script src="../jslib/three.js"></script>
+	<script src="../jslib/OrbitControls.js"></script>
+	<script src="../jslib/ThreeCSG.js"></script>
+	<script src="../jslib/dat.gui.js"></script>
+	<script type="text/javascript" src="data.json"></script>
+</head>
 
+<body>
+	<script>
 		var scene, camera, renderer, controls;
 		var figure, material, color;
 		var row;
 		var squareX = 128;
 		var squareZ = 128;
+		color = 1;
 
 		init();
+		animate();
+		buildSet();
 
 		function init() {
 
 			var spotLight, spotLight2, ambientLight;
+			var helper;
+			var params = {
+				castShadow: true,
+				shadowCameraVisible: false,
+				shadowCameraNear: 17,
+				shadowCameraFar: 2500,
+				shadowCameraFov: 45,
+				shadowBias: -0.0002,
+				targetX: 400,
+				targetZ: 500,
+			};
 
-		    	scene = new THREE.Scene();
-		    	// Renderer
-		    	renderer = new THREE.WebGLRenderer();
-		    	renderer.setSize( window.innerWidth, window.innerHeight );
-    			renderer.shadowMap.enabled = true;
-    			renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-		    	document.body.appendChild( renderer.domElement );
-		    	renderer.setClearColor( 0x9999ff );
+			scene = new THREE.Scene();
 
-            		// Camera
+			// Renderer
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.shadowMap.enabled = true;
+			renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+			document.body.appendChild( renderer.domElement );
+			renderer.setClearColor( 0x9999ff );
+			renderer.gammaInput = true;
+			renderer.gammaOutput = true;
+
+			// Camera
 			camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000 );
 			camera.position.set( 500, 300, -400 );
 
 			// Spotlight
-			spotLight = new THREE.SpotLight( 0xffffff, 0.7, 10000 );
-			spotLight.position.set( 100, 800, 500 );
-			spotLight.castShadow = true;
-			spotLight.shadow.mapSize.width = 1024;
-			spotLight.shadow.mapSize.height = 1024;
-			spotLight.shadow.camera.near = 0.1;
-			spotLight.shadow.camera.far = 1200;
-			spotLight.shadow.camera.fov = 50;
+			spotLight = new THREE.SpotLight( 0xffffff, 0.6, 0, Math.PI/2 );
+			spotLight.position.set( -400, 1150, 200 );
+			spotLight.castShadow = params.castShadow;
+			spotLight.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( params.shadowCameraFov, 1, params.shadowCameraNear, params.shadowCameraFar ) );
+			spotLight.shadow.bias = params.shadowBias;
 			scene.add( spotLight );
 
 			// Spotlight target
 			spotLight.target.position.set( 400, 0, 500 );
-			scene.add (spotLight.target);
+			scene.add( spotLight.target );
 
 			// Spotlight helper
-			// var helper = new THREE.CameraHelper(spotLight.shadow.camera);
-			// scene.add(helper);
+			helper = new THREE.CameraHelper(spotLight.shadow.camera);
+			scene.add(helper);
+			helper.visible = params.shadowCameraVisible;
 
 			// Ambient Light
-			ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+			ambientLight = new THREE.AmbientLight(0x404040); // soft white light
 			scene.add( ambientLight );
-
-			// Second spotlight
-			spotLight2 = new THREE.SpotLight( 0xffffff, 1.1 );
-			scene.add( spotLight2 );
-			spotLight2.position.set( 0, 1000, 0 );
-            		spotLight2.target.position.set( 512, 0, 512 );
-            		scene.add (spotLight2.target);
 
 			// Controls
 			controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -78,46 +85,74 @@
 			controls.enableZoom = true;
 			controls.target.set( 500, 50, 600 );
 
-			// CSG testing
+			// dat.gui testing
+			var gui = new dat.GUI({
+				height : 5 * 32 - 1,
+				width : 350
+			});
 
-			// var materialNormal = new THREE.MeshNormalMaterial();
-			//
-			// var cubeGeometry = new THREE.CubeGeometry( 100, 100, 100 );
-			// var cubeMesh = new THREE.Mesh( cubeGeometry );
-			// var cubeBSP = new ThreeBSP( cubeMesh );
-			//
-			// var sphereGeometry = new THREE.SphereGeometry( 60, 32, 32 );
-			// var sphereMesh = new THREE.Mesh( sphereGeometry );
-			// var sphereBSP = new ThreeBSP( sphereMesh );
+			gui.add( params, 'castShadow' ).onChange( function () {
+				spotLight.castShadow = params.castShadow;
+			});
 
-		    //	cube.substract(sphere);
-			// var newBSP = cubeBSP.subtract( sphereBSP );
-			// var newMesh = newBSP.toMesh( materialNormal );
-			// newMesh.position.set(450, 250, 450);
-			// scene.add( newMesh );
+			gui.add( params, 'shadowCameraVisible' ).onChange( function () {
+				helper.visible = params.shadowCameraVisible;
+			});
 
+			gui.add( params, 'shadowCameraNear', 0, 30 ).onChange( function () {
 
-			// Reanimating the scene and creating the board
-            		animate();
-			buildSet();
+        		spotLight.shadow.camera.near = params.shadowCameraNear;
+				spotLight.shadow.camera.updateProjectionMatrix();
+				helper.update();
+    		});
+
+			gui.add( params, 'shadowCameraFar', 1000, 5000 ).onChange( function () {
+
+        		spotLight.shadow.camera.far = params.shadowCameraFar;
+				spotLight.shadow.camera.updateProjectionMatrix();
+				helper.update();
+    		});
+
+			gui.add( params, 'shadowCameraFov', 1, 120 ).onChange( function () {
+
+				spotLight.shadow.camera.fov = params.shadowCameraFov;
+				spotLight.shadow.camera.updateProjectionMatrix();
+				helper.update();
+			});
+
+			gui.add( params, 'shadowBias', -0.01, 0.01 ).onChange( function () {
+				spotLight.shadow.bias = params.shadowBias;
+			});
+
+			gui.add( params, 'targetX', -200, 1024 ).onChange( function () {
+				spotLight.target.position.set( params.targetX, 0, params.targetZ );
+			});
+
+			gui.add( params, 'targetZ', -200, 1024 ).onChange( function () {
+				spotLight.target.position.set( params.targetX, 0, params.targetZ );
+			});
+
 		}
-		function setColor(pieceColor) {
+
+		// Changes color to white(0) or black(1)
+		function setColor( pieceColor ) {
 
 			color = pieceColor;
 
-			if (color == 0)
-				material = new THREE.MeshLambertMaterial( {color: 0xe5e589} );
-			else if (color == 1)
-				material = new THREE.MeshLambertMaterial( {color: 0x624121} );
+			if ( color == 0 )
+				material = new THREE.MeshPhongMaterial({ color: 0xe5e589 });
+			else if ( color == 1 )
+				material = new THREE.MeshPhongMaterial({ color: 0x624121 });
 		}
 
+		// Creates the chess board and generates pieces on both sides
 		function buildSet() {
 
 			createBoard();
 			buildKnights();
 
 			// Creates pieces on first and last rows
-			for( row=1, color=0; row<=8; row=row+7, color++ ) {
+			for ( row = 1, color = 0; row <= 8; row = row + 7, color++ ) {
 				buildPawns();
 				buildRooks();
 				buildQueens();
@@ -126,18 +161,23 @@
 			}
 		}
 
+		// Creates a flat cube with texture on it
 		function createBoard() {
 
 			var loader = new THREE.TextureLoader();
-			// Chess board
-			loader.load('img/chessboard.png', function( texture ) {
+			loader.load('img/chessboard.png', function(texture) {
 
-				var geometry = new THREE.BoxGeometry(1024,5,1024);
-				var material = new THREE.MeshLambertMaterial( { map: texture, overdraw: 0.5} );
-				var boardMesh = new THREE.Mesh( geometry, material );
+				var geometry, material, boardMesh;
+
+				geometry = new THREE.BoxGeometry( 1024, 5, 1024 );
+				material = new THREE.MeshLambertMaterial({
+					map: texture,
+					overdraw: 0.5
+				});
+				boardMesh = new THREE.Mesh( geometry, material );
 				boardMesh.receiveShadow = true;
 				scene.add( boardMesh );
-				boardMesh.position.set( 64+128*3, -3, 64+128*4 );
+				boardMesh.position.set( 64 + 128 * 3, -3, 64 + 128 * 4 );
 			});
 		}
 
@@ -151,9 +191,9 @@
 			else
 				pawnRow = 7;
 
-			for (var i=0; i<8; i++) {
+			for ( var i = 0; i < 8; i++ ) {
 				pawnClone = figure.clone();
-				pawnClone.position.set( squareX*i, 0, squareZ*pawnRow );
+				pawnClone.position.set( squareX * i, 0, squareZ * pawnRow );
 				scene.add( pawnClone );
 			}
 		}
@@ -163,24 +203,24 @@
 			var knightBaseClone, knightShape, knightGeometry, knightMesh;
 			var knightGroup, knightGroupClone;
 
-			setColor(0);
+			setColor( 0 );
 			buildPiece( knight );
 			knightBaseClone = figure.clone();
 
 			// Knight 2D shape
 			knightShape = new THREE.Shape();
 			knightShape.moveTo( 20, 0 );
-			knightShape.bezierCurveTo( 13, 0, 7, -3, 0, 6);
-			knightShape.bezierCurveTo( 25, 10, 30, 30 ,10, 80 );
+			knightShape.bezierCurveTo( 13, 0, 7, -3, 0, 6 );
+			knightShape.bezierCurveTo( 25, 10, 30, 30, 10, 80 );
 			knightShape.bezierCurveTo( 10, 110, 15, 120, 60, 95 );
-			knightShape.bezierCurveTo( 75, 90, 78, 95, 70, 80)
+			knightShape.bezierCurveTo( 75, 90, 78, 95, 70, 80 )
 			knightShape.lineTo( 60, 80 );
 			knightShape.bezierCurveTo( 70, 80, 50, 100, 50, 77 )
 			knightShape.moveTo( 70, 74 );
 			knightShape.lineTo( 65, 68 );
 			knightShape.bezierCurveTo( 55, 65, 45, 80, 40, 68 );
 			knightShape.bezierCurveTo( 50, 60, 60, 60, 80, 30 )
-			knightShape.bezierCurveTo( 83, 25, 80, 10 ,70, 0 )
+			knightShape.bezierCurveTo( 83, 25, 80, 10, 70, 0 )
 
 			var extrudeSettings = {
 				amount: 16,
@@ -192,32 +232,34 @@
 			knightGeometry = new THREE.ExtrudeGeometry( knightShape, extrudeSettings );
 			knightMesh = new THREE.Mesh( knightGeometry, material );
 			knightMesh.position.set( knightBaseClone.position.x + 8, 52, -40 );
-			knightMesh.rotateY( Math.PI*2/4*3 );
+			knightMesh.rotateY( Math.PI * 2 / 4 * 3 );
+			knightMesh.castShadow = true;
+			knightMesh.receiveShadow = true;
 
 			// Grouping knight's head with bust and adding to the scene
 			knightGroup = new THREE.Object3D();
 			knightGroup.add( knightBaseClone );
 			knightGroup.add( knightMesh );
 			scene.add( knightGroup );
-			knightGroup.position.set( squareX*6, 0, squareZ*1 );
+			knightGroup.position.set( squareX * 6, 0, squareZ * 1 );
 			knightGroupClone = knightGroup.clone();
-			knightGroup.position.set( squareX*1, 0, squareZ*1 );
+			knightGroup.position.set( squareX * 1, 0, squareZ * 1 );
 			scene.add( knightGroupClone );
 
 			// Changing color to black
 			knightGroupClone = knightGroup.clone();
-			knightGroupClone.children.forEach(function( part ) {
+			knightGroupClone.children.forEach(function(part) {
 				part.material = knightGroup.children[0].material.clone();
 				part.material.color.setHex( 0x624121 );
 			});
 
 			// Black knight clones
-			knightGroupClone.position.set( squareX*1, 0, squareZ*8 );
+			knightGroupClone.position.set( squareX * 1, 0, squareZ * 8 );
 			knightGroupClone.rotateY( Math.PI );
 			scene.add( knightGroupClone );
 
 			knightGroupClone = knightGroupClone.clone();
-			knightGroupClone.position.set( squareX*6, 0, squareZ*8 );
+			knightGroupClone.position.set( squareX * 6, 0, squareZ * 8 );
 			scene.add( knightGroupClone );
 		}
 
@@ -227,26 +269,44 @@
 			buildPiece( rook );
 
 			rookClone = figure.clone();
-			rookClone.position.set( 0, 0, squareZ*row );
+			rookClone.position.set( 0, 0, squareZ * row );
 			scene.add( rookClone );
 
 			rookClone = figure.clone();
-			rookClone.position.set( squareX*7, 0, squareZ*row );
+			rookClone.position.set( squareX * 7, 0, squareZ * row );
 			scene.add( rookClone );
 		}
 
+		// This function uses threeCSG library to make a cut in bishop piece
+		// Variables with BSP are threeCSG meshes
 		function buildBishops() {
 
-			var bishopClone;
+			var bishopMesh, cutBishop, cutBishopClone, cutGeometry, cutMesh;
+			var cutMeshBSP, bishopMeshBSP, cutBishopMeshBSP;
 			buildPiece( bishop );
 
-			bishopClone = figure.clone();
-			bishopClone.position.set( squareX*5, 0, squareZ*row );
-			scene.add( bishopClone );
+			bishopMesh = figure.clone();
+			bishopMeshBSP = new ThreeBSP( bishopMesh );
 
-			bishopClone = figure.clone();
-			bishopClone.position.set( squareX*2, 0, squareZ*row );
-			scene.add( bishopClone );
+			// The cube that will be subtracted from bishop mesh
+			cutGeometry = new THREE.CubeGeometry( 4, 50, 50 );
+			cutMesh = new THREE.Mesh( cutGeometry );
+			cutMesh.position.set( -15, 150, 0 );
+			cutMesh.rotateZ( Math.PI/180*35 );
+			cutMeshBSP = new ThreeBSP( cutMesh );
+
+			// The cut bishop mesh creation and positioning
+			cutBishopMeshBSP = bishopMeshBSP.subtract( cutMeshBSP );
+			cutBishop = cutBishopMeshBSP.toMesh( material );
+			cutBishop.castShadow = true;
+			cutBishop.receiveShadow = true;
+			cutBishop.position.set( squareX *5, 0, squareZ * row );
+			scene.add( cutBishop );
+
+			// Cut bishop's clone and positioning
+			cutBishopClone = cutBishop.clone();
+			cutBishopClone.position.set( squareX * 2, 0, squareZ * row );
+			scene.add( cutBishopClone );
 		}
 
 		function buildQueens() {
@@ -255,7 +315,7 @@
 			buildPiece( queen );
 
 			queenClone = figure.clone();
-			queenClone.position.set( squareX*3, 0, squareZ*row );
+			queenClone.position.set( squareX * 3, 0, squareZ * row );
 			scene.add( queenClone );
 		}
 
@@ -263,10 +323,10 @@
 
 			var geometry, cube, kingClone;
 			var kingGroup = new THREE.Object3D();
-
 			buildPiece( king );
+
 			kingClone = figure.clone();
-			kingClone.position.set( squareX*4, 0, squareZ*row );
+			kingClone.position.set( squareX * 4, 0, squareZ * row );
 
 			/* Creating two cubes for the king cross
 		 	   Vertical cube */
@@ -274,14 +334,14 @@
 			geometry = new THREE.BoxGeometry( 5, 20, 5 );
 			cube = new THREE.Mesh( geometry, material );
 			cube.castShadow = true;
-			cube.position.set( squareX*4, 190, squareZ*row );
+			cube.receiveShadow = true;
+			cube.position.set( squareX * 4, 190, squareZ * row );
 			kingGroup.add( cube );
 
 			// Horizontal cube
 			geometry = new THREE.BoxGeometry( 20, 5, 5 );
 			cube = new THREE.Mesh( geometry, material );
-			cube.position.set( squareX*4, 190, squareZ*row );
-
+			cube.position.set( squareX * 4, 190, squareZ * row );
 			kingGroup.add( cube );
 
 			scene.add( kingGroup );
@@ -292,17 +352,18 @@
 
 			var points, count, figureGeometry
 
-			setColor(color);
-            		points = [];
-            		count = piece.pointsX.length;
-            		for (var i = 0; i < count; i++) {
-                		points.push( new THREE.Vector2(piece.pointsX[i], piece.pointsY[i]) );
-            		}
+			setColor( color );
+			points = [];
+			count = piece.pointsX.length;
+			for ( var i = 0; i < count; i++ ) {
+				points.push(new THREE.Vector2( piece.pointsX[i], piece.pointsY[i] ));
+			}
 
-            		figureGeometry = new THREE.LatheGeometry( points, 24 );
+			figureGeometry = new THREE.LatheGeometry( points, 36 );
 			figure = new THREE.Mesh( figureGeometry, material );
 			figure.castShadow = true;
-        }
+			figure.receiveShadow = true;
+		}
 
 		function animate() {
 
@@ -314,7 +375,7 @@
 		function render() {
 			renderer.render( scene, camera );
 		}
+	</script>
+</body>
 
-		</script>
-	</body>
 </html>
