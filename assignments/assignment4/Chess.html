@@ -29,6 +29,7 @@
 
 			var spotLight, spotLight2, ambientLight;
 			var helper;
+			var degree = Math.PI/180;
 			var params = {
 				castShadow: true,
 				shadowCameraVisible: false,
@@ -52,16 +53,26 @@
 			renderer.gammaInput = true;
 			renderer.gammaOutput = true;
 
+			// Textures
+			var textureLoader = new THREE.TextureLoader();
+
+			lightPieceTexture = textureLoader.load( "img/LightPieceTexture.jpg" );
+			lightPieceTexture.repeat.set( 5, 8 );
+			lightPieceTexture.wrapS = lightPieceTexture.wrapT = THREE.RepeatWrapping;
+
+			darkPieceTexture = textureLoader.load( "img/DarkPieceTexture.jpg" );
+
 			// Camera
 			camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000 );
 			camera.position.set( 500, 300, -400 );
 
 			// Spotlight
 			spotLight = new THREE.SpotLight( 0xffffff, 0.6, 0, Math.PI/2 );
-			spotLight.position.set( -400, 1150, 200 );
-			spotLight.castShadow = params.castShadow;
+			spotLight.position.set( -400, 1350, 200 );
+			spotLight.castShadow = true;
 			spotLight.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( params.shadowCameraFov, 1, params.shadowCameraNear, params.shadowCameraFar ) );
 			spotLight.shadow.bias = params.shadowBias;
+			//spotLight.penumbra = 2
 			scene.add( spotLight );
 
 			// Spotlight target
@@ -81,7 +92,7 @@
 			controls = new THREE.OrbitControls( camera, renderer.domElement );
 			controls.addEventListener( 'change', render );
 			controls.enableDamping = true;
-			controls.dampingFactor = 0.75;
+			controls.dampingFactor = 0.8;
 			controls.enableZoom = true;
 			controls.target.set( 500, 50, 600 );
 
@@ -120,15 +131,15 @@
 				helper.update();
 			});
 
-			gui.add( params, 'shadowBias', -0.01, 0.01 ).onChange( function () {
+			gui.add( params, 'shadowBias', -0.002, 0.008 ).onChange( function () {
 				spotLight.shadow.bias = params.shadowBias;
 			});
 
-			gui.add( params, 'targetX', -200, 1024 ).onChange( function () {
+			gui.add( params, 'targetX', -400, 1500 ).onChange( function () {
 				spotLight.target.position.set( params.targetX, 0, params.targetZ );
 			});
 
-			gui.add( params, 'targetZ', -200, 1024 ).onChange( function () {
+			gui.add( params, 'targetZ', -400, 1500 ).onChange( function () {
 				spotLight.target.position.set( params.targetX, 0, params.targetZ );
 			});
 
@@ -140,9 +151,16 @@
 			color = pieceColor;
 
 			if ( color == 0 )
-				material = new THREE.MeshPhongMaterial({ color: 0xe5e589 });
+				//material = new THREE.MeshPhongMaterial({ color: 0xe5e589 });
+				material = new THREE.MeshPhongMaterial( {
+					shininess: 80,
+					map: lightPieceTexture
+				} );
 			else if ( color == 1 )
-				material = new THREE.MeshPhongMaterial({ color: 0x624121 });
+				material = new THREE.MeshPhongMaterial( {
+					shininess: 40,
+					map: darkPieceTexture
+				} );
 		}
 
 		// Creates the chess board and generates pieces on both sides
@@ -250,7 +268,10 @@
 			knightGroupClone = knightGroup.clone();
 			knightGroupClone.children.forEach(function(part) {
 				part.material = knightGroup.children[0].material.clone();
-				part.material.color.setHex( 0x624121 );
+				part.material = material = new THREE.MeshPhongMaterial( {
+					shininess: 40,
+					map: darkPieceTexture
+				} );
 			});
 
 			// Black knight clones
@@ -359,7 +380,7 @@
 				points.push(new THREE.Vector2( piece.pointsX[i], piece.pointsY[i] ));
 			}
 
-			figureGeometry = new THREE.LatheGeometry( points, 36 );
+			figureGeometry = new THREE.LatheGeometry( points, 24 );
 			figure = new THREE.Mesh( figureGeometry, material );
 			figure.castShadow = true;
 			figure.receiveShadow = true;
