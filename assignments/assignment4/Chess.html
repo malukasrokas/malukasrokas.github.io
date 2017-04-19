@@ -14,11 +14,11 @@
 
 <body>
 	<script>
+
 		var scene, camera, renderer, controls;
 		var figure, material, color;
 		var row;
-		var squareX = 128;
-		var squareZ = 128;
+		var squareX = squareZ = 128;
 		color = 1;
 
 		init();
@@ -28,18 +28,24 @@
 		function init() {
 
 			var spotLight, spotLight2, ambientLight;
-			var helper;
-			var degree = Math.PI/180;
-			var params = {
+			var shadowCameraHelper, gui, textureLoader;
+			var shadowCameraRadius = 1000;
+			var shadowGUI = {
 				castShadow: true,
 				shadowCameraVisible: false,
 				shadowCameraNear: 17,
 				shadowCameraFar: 2500,
 				shadowCameraFov: 45,
-				shadowBias: -0.0002,
+				shadowBias: 0.00001,
 				targetX: 400,
 				targetZ: 500,
+				spotLightX: 500,
+				spotLightY: 1350,
+				spotLightZ: 500,
+				spotLightDegree: 160
 			};
+
+			window.addEventListener( 'resize', onWindowResize, false );
 
 			scene = new THREE.Scene();
 
@@ -47,32 +53,37 @@
 			renderer = new THREE.WebGLRenderer( { antialias: true } );
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			renderer.shadowMap.enabled = true;
-			renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+			//renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 			document.body.appendChild( renderer.domElement );
 			renderer.setClearColor( 0x9999ff );
 			renderer.gammaInput = true;
 			renderer.gammaOutput = true;
 
 			// Textures
-			var textureLoader = new THREE.TextureLoader();
+			textureLoader = new THREE.TextureLoader();
 
-			lightPieceTexture = textureLoader.load( "img/LightPieceTexture.jpg" );
+			darkPieceTexture = textureLoader.load( "textures/DarkPieceTexture.jpg" );
+			tableTexture = textureLoader.load( "textures/TableTexture.jpg" );
+			boardTexture = textureLoader.load( "textures/BoardTexture.png" );
+			lightPieceTexture = textureLoader.load( "textures/LightPieceTexture.jpg" );
+
 			lightPieceTexture.repeat.set( 5, 8 );
 			lightPieceTexture.wrapS = lightPieceTexture.wrapT = THREE.RepeatWrapping;
 
-			darkPieceTexture = textureLoader.load( "img/DarkPieceTexture.jpg" );
-
 			// Camera
-			camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 1, 10000 );
-			camera.position.set( 500, 300, -400 );
+			camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+			camera.position.set( 300, 300, -500 );
 
 			// Spotlight
 			spotLight = new THREE.SpotLight( 0xffffff, 0.6, 0, Math.PI/2 );
-			spotLight.position.set( -400, 1350, 200 );
+			spotLight.position.set(
+				shadowGUI.spotLightX + Math.cos(Math.PI/180*shadowGUI.spotLightDegree)*shadowCameraRadius,
+				shadowGUI.spotLightY,
+				shadowGUI.spotLightZ + Math.sin(Math.PI/180*shadowGUI.spotLightDegree)*shadowCameraRadius
+			);
 			spotLight.castShadow = true;
-			spotLight.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( params.shadowCameraFov, 1, params.shadowCameraNear, params.shadowCameraFar ) );
-			spotLight.shadow.bias = params.shadowBias;
-			//spotLight.penumbra = 2
+			spotLight.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( shadowGUI.shadowCameraFov, 1, shadowGUI.shadowCameraNear, shadowGUI.shadowCameraFar ) );
+			spotLight.shadow.bias = shadowGUI.shadowBias;
 			scene.add( spotLight );
 
 			// Spotlight target
@@ -80,12 +91,12 @@
 			scene.add( spotLight.target );
 
 			// Spotlight helper
-			helper = new THREE.CameraHelper(spotLight.shadow.camera);
-			scene.add(helper);
-			helper.visible = params.shadowCameraVisible;
+			shadowCameraHelper = new THREE.CameraHelper(spotLight.shadow.camera);
+			scene.add(shadowCameraHelper);
+			shadowCameraHelper.visible = shadowGUI.shadowCameraVisible;
 
 			// Ambient Light
-			ambientLight = new THREE.AmbientLight(0x404040); // soft white light
+			ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
 			scene.add( ambientLight );
 
 			// Controls
@@ -96,62 +107,80 @@
 			controls.enableZoom = true;
 			controls.target.set( 500, 50, 600 );
 
-			// dat.gui testing
-			var gui = new dat.GUI({
-				height : 5 * 32 - 1,
-				width : 350
-			});
+			// GUI
+			gui = new dat.GUI( { width : 300 } );
 
-			gui.add( params, 'castShadow' ).onChange( function () {
-				spotLight.castShadow = params.castShadow;
-			});
+			gui.add( shadowGUI, 'castShadow' ).onChange( function () {
 
-			gui.add( params, 'shadowCameraVisible' ).onChange( function () {
-				helper.visible = params.shadowCameraVisible;
-			});
+				spotLight.castShadow = shadowGUI.castShadow;
+			} );
 
-			gui.add( params, 'shadowCameraNear', 0, 30 ).onChange( function () {
+			gui.add( shadowGUI, 'shadowCameraVisible' ).onChange( function () {
 
-        		spotLight.shadow.camera.near = params.shadowCameraNear;
+				shadowCameraHelper.visible = shadowGUI.shadowCameraVisible;
+			} );
+
+			gui.add( shadowGUI, 'shadowCameraNear', 0, 30 ).onChange( function () {
+
+        		spotLight.shadow.camera.near = shadowGUI.shadowCameraNear;
 				spotLight.shadow.camera.updateProjectionMatrix();
-				helper.update();
-    		});
+				shadowCameraHelper.update();
+    		} );
 
-			gui.add( params, 'shadowCameraFar', 1000, 5000 ).onChange( function () {
+			gui.add( shadowGUI, 'shadowCameraFar', 500, 5000 ).onChange( function () {
 
-        		spotLight.shadow.camera.far = params.shadowCameraFar;
+        		spotLight.shadow.camera.far = shadowGUI.shadowCameraFar;
 				spotLight.shadow.camera.updateProjectionMatrix();
-				helper.update();
-    		});
+				shadowCameraHelper.update();
+    		} );
 
-			gui.add( params, 'shadowCameraFov', 1, 120 ).onChange( function () {
+			gui.add( shadowGUI, 'shadowCameraFov', 1, 120 ).onChange( function () {
 
-				spotLight.shadow.camera.fov = params.shadowCameraFov;
+				spotLight.shadow.camera.fov = shadowGUI.shadowCameraFov;
 				spotLight.shadow.camera.updateProjectionMatrix();
-				helper.update();
-			});
+				shadowCameraHelper.update();
+			} );
 
-			gui.add( params, 'shadowBias', -0.002, 0.008 ).onChange( function () {
-				spotLight.shadow.bias = params.shadowBias;
-			});
+			gui.add( shadowGUI, 'shadowBias', -0.002, 0.008 ).onChange( function () {
 
-			gui.add( params, 'targetX', -400, 1500 ).onChange( function () {
-				spotLight.target.position.set( params.targetX, 0, params.targetZ );
-			});
+				spotLight.shadow.bias = shadowGUI.shadowBias;
+			} );
 
-			gui.add( params, 'targetZ', -400, 1500 ).onChange( function () {
-				spotLight.target.position.set( params.targetX, 0, params.targetZ );
-			});
+			gui.add( shadowGUI, 'targetX', -400, 1500 ).onChange( function () {
 
+				spotLight.target.position.set( shadowGUI.targetX, 0, shadowGUI.targetZ );
+			} );
+
+			gui.add( shadowGUI, 'targetZ', -400, 1500 ).onChange( function () {
+
+				spotLight.target.position.set( shadowGUI.targetX, 0, shadowGUI.targetZ );
+			} );
+
+			gui.add( shadowGUI, 'spotLightY', 100, 1400).onChange( function () {
+
+				spotLight.position.set(
+					shadowGUI.spotLightX + Math.cos(Math.PI/180*shadowGUI.spotLightDegree)*shadowCameraRadius,
+					shadowGUI.spotLightY,
+					shadowGUI.spotLightZ + Math.sin(Math.PI/180*shadowGUI.spotLightDegree)*shadowCameraRadius
+				);
+			} );
+
+			gui.add( shadowGUI, 'spotLightDegree', -360, 360).onChange( function () {
+
+				spotLight.position.set(
+					shadowGUI.spotLightX + Math.cos(Math.PI/180*shadowGUI.spotLightDegree)*shadowCameraRadius,
+					shadowGUI.spotLightY,
+					shadowGUI.spotLightZ + Math.sin(Math.PI/180*shadowGUI.spotLightDegree)*shadowCameraRadius
+				);
+			} );
 		}
 
-		// Changes color to white(0) or black(1)
+		// Changes texture to light(0) or dark(1)
 		function setColor( pieceColor ) {
 
 			color = pieceColor;
 
 			if ( color == 0 )
-				//material = new THREE.MeshPhongMaterial({ color: 0xe5e589 });
 				material = new THREE.MeshPhongMaterial( {
 					shininess: 80,
 					map: lightPieceTexture
@@ -179,24 +208,27 @@
 			}
 		}
 
-		// Creates a flat cube with texture on it
+		// Creates a textured tabletop and a board
 		function createBoard() {
 
-			var loader = new THREE.TextureLoader();
-			loader.load('img/chessboard.png', function(texture) {
+			var boardGeometry, boardMaterial, boardMesh;
+			var tableGeometry, tableMaterial, tableMesh;
 
-				var geometry, material, boardMesh;
+			// Tabletop
+			tableGeometry = new THREE.BoxGeometry( 1300, 5, 1500 );
+			tableMaterial = new THREE.MeshLambertMaterial( { map: tableTexture } );
+			tableMesh = new THREE.Mesh( tableGeometry, tableMaterial );
+			tableMesh.receiveShadow = true;
+			scene.add( tableMesh );
+			tableMesh.position.set( squareX * 3.5, -10, squareZ * 4.5 )
 
-				geometry = new THREE.BoxGeometry( 1024, 5, 1024 );
-				material = new THREE.MeshLambertMaterial({
-					map: texture,
-					overdraw: 0.5
-				});
-				boardMesh = new THREE.Mesh( geometry, material );
-				boardMesh.receiveShadow = true;
-				scene.add( boardMesh );
-				boardMesh.position.set( 64 + 128 * 3, -3, 64 + 128 * 4 );
-			});
+			// Chess board
+			boardGeometry = new THREE.BoxGeometry( 1024, 5, 1024 );
+			boardMaterial = new THREE.MeshLambertMaterial( { map: boardTexture } );
+			boardMesh = new THREE.Mesh( boardGeometry, boardMaterial );
+			boardMesh.receiveShadow = true;
+			scene.add( boardMesh );
+			boardMesh.position.set( squareX * 3.5, -3, squareZ * 4.5 );
 		}
 
 		function buildPawns() {
@@ -266,13 +298,13 @@
 
 			// Changing color to black
 			knightGroupClone = knightGroup.clone();
-			knightGroupClone.children.forEach(function(part) {
+			knightGroupClone.children.forEach( function( part ) {
 				part.material = knightGroup.children[0].material.clone();
 				part.material = material = new THREE.MeshPhongMaterial( {
 					shininess: 40,
 					map: darkPieceTexture
 				} );
-			});
+			} );
 
 			// Black knight clones
 			knightGroupClone.position.set( squareX * 1, 0, squareZ * 8 );
@@ -394,8 +426,19 @@
 		}
 
 		function render() {
+
 			renderer.render( scene, camera );
 		}
+
+		// Resizes window when needed
+		function onWindowResize(){
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+		}
+
 	</script>
 </body>
 
