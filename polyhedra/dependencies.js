@@ -5,8 +5,8 @@ var blue_vertex = new THREE.TextureLoader().load('static/blue_vertex.png');
 var yellow_vertex = new THREE.TextureLoader().load('static/yellow_vertex.png');
 
 var rotationDegree = 0;
-scene = null;
-var camera, renderer, controls;
+
+var scene, camera, renderer, controls;
 var planeGeometry, planeMaterial, plane;
 var sphereGeometry, sphereMaterial, sphere;
 
@@ -32,17 +32,13 @@ function initializeScene() {
     controls = new THREE.OrbitControls( camera, renderer.domElement );
 
     // Plane
-    planeGeometry = new THREE.PlaneGeometry( 10, 10, 32, 32 );
+    planeGeometry = new THREE.PlaneGeometry( 24, 24, 32, 32 );
     planeMaterial = new THREE.MeshBasicMaterial( {
         color: 0xffffff,
         side: THREE.DoubleSide
     } );
     plane = new THREE.Mesh( planeGeometry, planeMaterial );
     scene.add( plane );
-
-    // Axis helper
-    // var axisHelper = new THREE.AxisHelper( 5 );
-    // scene.add( axisHelper )
 
     // Sphere
     sphereGeometry = new THREE.SphereGeometry( 1, 48, 48 );

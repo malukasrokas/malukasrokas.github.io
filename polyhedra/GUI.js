@@ -18,6 +18,7 @@ var params = {
     rotateY: false,
     rotateZ: false,
     showCube: false,
+    showSphere: true,
     sphereWireframe: false,
 };
 
@@ -25,7 +26,15 @@ GUI.add( params, 'showCube' ).name( 'DisplayCube' ).onChange( function() {
     if (params.showCube) {
         scene.add( cube );
     } else {
-        scene.remove( scene.getObjectByName( 'cube' ) );
+        scene.remove( cube );
+    }
+} );
+
+GUI.add( params, 'showSphere' ).name( 'DisplaySphere ').onChange( function() {
+    if ( params.showSphere ) {
+        scene.add( sphere );
+    } else {
+        scene.remove( sphere );
     }
 } );
 

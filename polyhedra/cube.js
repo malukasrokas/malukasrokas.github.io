@@ -40,4 +40,3 @@ var wireframeMaterial = new THREE.LineBasicMaterial( {
     linewidth: 2
 } );
 cube = new THREE.LineSegments( wireframeGeometry, wireframeMaterial );
-cube.name = 'cube';
