@@ -1,12 +1,17 @@
 initializeScene();
 
-addNorthPole();
+// addNorthPole();
 
 if ( !params.rotate ) {
-    sphericalizeObject( cube );
-    addPlaneShape( cube );
-    cube.position.z = 1;
+    // cube.addToScene();
+    // scene.add( sphere );
+    // scene.add( plane );
+    // scene.add( sphere );
+    current_polytope = hypercube;
+    buildPolyheroid( current_polytope );
 }
+
+
 
 // Rendering
 var animate = function () {

@@ -5,14 +5,14 @@ var blue_vertex = new THREE.TextureLoader().load('static/blue_vertex.png');
 var yellow_vertex = new THREE.TextureLoader().load('static/yellow_vertex.png');
 
 var rotationDegree = 0;
+var sphericalize_polytopes = true;
+var current_polytope = null;
 
 var scene, camera, renderer, controls;
 var planeGeometry, planeMaterial, plane;
 var sphereGeometry, sphereMaterial, sphere;
 
 var cubeVertexes = [];
-
-// lineSegments = [];
 
 function initializeScene() {
     scene = new THREE.Scene();
@@ -38,7 +38,6 @@ function initializeScene() {
         side: THREE.DoubleSide
     } );
     plane = new THREE.Mesh( planeGeometry, planeMaterial );
-    scene.add( plane );
 
     // Sphere
     sphereGeometry = new THREE.SphereGeometry( 1, 48, 48 );
@@ -46,11 +45,9 @@ function initializeScene() {
         color: 0xdeb6c0,
         transparent: true,
         opacity: 0.2,
-        wireframe: params.sphereWireframe,
     } );
     sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
     sphere.position.set( 0, 0, 1 );
-    scene.add( sphere );
 }
 
 // Displays north pole at the top of the sphere
@@ -122,12 +119,6 @@ function applyRotationToVertices( vertices ) {
     return vertices;
 }
 
-// Creates a line split into fragments
-function fragmentLineByLength( v1, v2, length ) {
-    var dir = v2.clone().sub( v1 ).normalize().multiplyScalar(0.2);
-    console.log(v1.clone().add(dir))
-    return v1.clone().add(dir);
-}
 
 // Returns a Vector3 which is in between two vectors by percentage
 function getPointInLineByPerc( v1, v2, percentage ) {

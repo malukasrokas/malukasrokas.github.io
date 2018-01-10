@@ -13,10 +13,8 @@ THREE.EdgesGeometry.prototype.vertexes = function( position ) {
 
     position.z = 0;
     var edgeHalf = 1;
-
     this._vertexes[0].set( position.x - edgeHalf, position.y + edgeHalf, position.z + edgeHalf );
     this._vertexes[1].set( position.x + edgeHalf, position.y + edgeHalf, position.z + edgeHalf );
-
     this._vertexes[2].set( position.x + edgeHalf, position.y - edgeHalf, position.z + edgeHalf );
     this._vertexes[3].set( position.x - edgeHalf, position.y - edgeHalf, position.z + edgeHalf );
     this._vertexes[4].set( position.x - edgeHalf, position.y + edgeHalf, position.z - edgeHalf );
@@ -40,3 +38,14 @@ var wireframeMaterial = new THREE.LineBasicMaterial( {
     linewidth: 2
 } );
 cube = new THREE.LineSegments( wireframeGeometry, wireframeMaterial );
+
+cube.addToScene = function() {
+    sphericalizeObject( this );
+    addPlaneShape( this );
+    this.position.z = 1;
+}
+
+cube.removeFromScene = function() {
+    scene.remove( scene.getObjectByName( 'shape-vertexes' ) );
+    scene.remove( scene.getObjectByName( 'plane-vertexes' ) );
+}

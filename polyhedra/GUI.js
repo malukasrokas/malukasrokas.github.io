@@ -11,6 +11,7 @@ dat.GUI.prototype.removeFolder = function( name ) {
 }
 
 var GUI = new dat.GUI();
+var sphericalize;
 
 var params = {
     rotate: false,
@@ -18,19 +19,15 @@ var params = {
     rotateY: false,
     rotateZ: false,
     showCube: false,
-    showSphere: true,
+    showSphere: false,
     sphereWireframe: false,
+
+    cube: false,
+    hypercube: true,
+    sphericalize: true,
 };
 
-GUI.add( params, 'showCube' ).name( 'DisplayCube' ).onChange( function() {
-    if (params.showCube) {
-        scene.add( cube );
-    } else {
-        scene.remove( cube );
-    }
-} );
-
-GUI.add( params, 'showSphere' ).name( 'DisplaySphere ').onChange( function() {
+showSphere = GUI.add( params, 'showSphere' ).name( 'DisplaySphere ').onChange( function() {
     if ( params.showSphere ) {
         scene.add( sphere );
     } else {
@@ -38,16 +35,67 @@ GUI.add( params, 'showSphere' ).name( 'DisplaySphere ').onChange( function() {
     }
 } );
 
-GUI.add( params, 'sphereWireframe' ).name( 'WireframeSphere' ).onChange( function() {
-    sphere.material.wireframe = params.sphereWireframe;
-} );
 
-GUI.add( params, 'rotate' ).name( 'RotateObject' ).onChange( function() {
+rotate = GUI.add( params, 'rotate' ).name( 'RotateObject' ).onChange( function() {
     params.rotate ? toggleAxesFolder( true ) : toggleAxesFolder( false );
 
     // If no axis was selected when enabled, choose X axis as default
     if ( !params.rotateX || !params.rotateY || !params.rotateZ ) params.rotateX = true;
 } );
+
+cubeObject = GUI.add( params, 'cube' ).name( 'Cube' ).onChange( function() {
+    resetScene();
+    disableOtherObjects();
+    sphericalize.domElement.parentNode.parentNode.style.display = 'none';
+    if ( params.cube ) {
+        rotationDegree = 0;
+        scene.add( plane );
+        cube.addToScene();
+        showSphere.domElement.parentNode.parentNode.style.display = 'block';
+        rotate.domElement.parentNode.parentNode.style.display = 'block';
+        if (params.rotate) {
+            toggleAxesFolder( true );
+            rotate.domElement.click();
+        }
+        if (params.showSphere) {
+            scene.add( sphere );
+        }
+    } else {
+        showSphere.domElement.parentNode.parentNode.style.display = 'none';
+        rotate.domElement.parentNode.parentNode.style.display = 'none';
+        if (params.rotate) {
+            toggleAxesFolder( false );
+            rotate.domElement.click();
+        }
+
+    }
+} );
+
+
+hypercubeObject = GUI.add( params, 'hypercube' ).name( 'Hypercube' ).onChange( function() {
+    resetScene();
+    if ( params.hypercube ) {
+        current_polytope = hypercube;
+        sphericalize.domElement.parentNode.parentNode.style.display = 'block';
+        if (params.rotate) {
+            rotate.domElement.click();
+        }
+        if (params.cube) {
+            cubeObject.domElement.click();
+        }
+        buildPolyheroid( hypercube );
+    } else {
+        sphericalize.domElement.parentNode.parentNode.style.display = 'none';
+
+    }
+} );
+
+sphericalize = GUI.add( params, 'sphericalize' ).name( 'Sphericalize' ).onChange( function() {
+    resetScene();
+    sphericalize_polytopes = params.sphericalize;
+    buildPolyheroid( current_polytope );
+} );
+
 
 GUI.open();
 
@@ -67,4 +115,14 @@ function toggleAxesFolder( rotationIsEnabled ) {
     };
 
     rotationIsEnabled ? addAxesFolder() : GUI.removeFolder( 'Axes' );
+}
+
+function disableOtherObjects() {
+    params.hypercube && hypercubeObject.domElement.click();
+}
+
+function resetScene() {
+    while (scene.children.length > 0) {
+        scene.remove(scene.children[0]);
+    }
 }
