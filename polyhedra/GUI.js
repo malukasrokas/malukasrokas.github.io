@@ -96,7 +96,8 @@ sphericalize = GUI.add( params, 'sphericalize' ).name( 'Sphericalize' ).onChange
     buildPolyheroid( current_polytope );
 } );
 
-
+showSphere.domElement.parentNode.parentNode.style.display = 'none';
+rotate.domElement.parentNode.parentNode.style.display = 'none';
 GUI.open();
 
 
