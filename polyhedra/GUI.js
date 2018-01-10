@@ -46,13 +46,13 @@ rotate = GUI.add( params, 'rotate' ).name( 'RotateObject' ).onChange( function()
 cubeObject = GUI.add( params, 'cube' ).name( 'Cube' ).onChange( function() {
     resetScene();
     disableOtherObjects();
-    sphericalize.domElement.parentNode.parentNode.style.display = 'none';
     if ( params.cube ) {
         rotationDegree = 0;
         scene.add( plane );
         cube.addToScene();
         showSphere.domElement.parentNode.parentNode.style.display = 'block';
         rotate.domElement.parentNode.parentNode.style.display = 'block';
+        sphericalize.domElement.parentNode.parentNode.style.display = 'none';
         if (params.rotate) {
             toggleAxesFolder( true );
             rotate.domElement.click();
